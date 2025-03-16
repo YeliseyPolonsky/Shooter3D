@@ -19,13 +19,14 @@ public class PlayerMove : MonoBehaviour
     private Vector3 worldDirection;
     
     [SerializeField] private float gravity = -20f;
-    private float yVelocity;
+    private Vector3 velocity;
     
     void Update()
     {
         Rotate();
         Gravity();
         Move();
+        
     }
 
     private void Rotate()
@@ -40,25 +41,50 @@ public class PlayerMove : MonoBehaviour
     private void Move()
     {
         if (Input.GetKeyDown(KeyCode.Space) && characterController.isGrounded)
-            yVelocity += jumpHeight;
+            velocity.y += Mathf.Sqrt(jumpHeight * -2f * gravity);
         
         moveDirection = new Vector3(Input.GetAxisRaw("Horizontal"), 0, Input.GetAxisRaw("Vertical"));
-        moveDirection = Vector3.Normalize(moveDirection);
+        moveDirection = Vector3.ClampMagnitude(moveDirection, 1f);
+        worldDirection = transform.TransformVector(moveDirection) * speed;
+        
+        velocity = new Vector3(worldDirection.x, velocity.y, worldDirection.z);
+        
+        characterController.Move(velocity * Time.deltaTime);
 
-        worldDirection = transform.TransformVector(moveDirection);
-        characterController.Move(worldDirection * speed * Time.deltaTime 
-                                 + Vector3.up * yVelocity * Time.deltaTime);
+        if (Input.GetKey(KeyCode.LeftControl))
+        {
+            characterController.height = Mathf.Lerp(characterController.height, 0.9f , Time.deltaTime * 10f);
+            characterController.center = Vector3.Lerp(characterController.center, Vector3.up * 0.45f , Time.deltaTime * 10f);
+            head.localPosition = Vector3.Lerp(head.localPosition, Vector3.up * 0.8f , Time.deltaTime * 10f);
+        }
+        else if (MayStandUp())
+        {
+            characterController.height = Mathf.Lerp(characterController.height, 1.8f, Time.deltaTime * 10f);
+            characterController.center = Vector3.Lerp(characterController.center, Vector3.up * 0.9f , Time.deltaTime * 10f);
+            head.localPosition = Vector3.Lerp(head.localPosition, Vector3.up * 1.6f , Time.deltaTime * 10f);
+        }
     }
 
     private void Gravity()
     {
         if (!characterController.isGrounded)
         {
-            yVelocity += gravity * Time.deltaTime;
+            velocity.y += gravity * Time.deltaTime;
         }
-        else
+        else if(velocity.y < 0)
         {
-            yVelocity = -0.5f;
+            velocity.y =-1f;
         }
+    }
+
+    private bool MayStandUp()
+    {
+        bool hitDown = Physics.Raycast(transform.position + Vector3.up * 0.5f, Vector3.down, out RaycastHit downRaycastHit);
+        bool hitUp = Physics.Raycast(transform.position + Vector3.up * 0.5f, Vector3.up, out RaycastHit upRaycastHit);
+
+        if (upRaycastHit.distance + downRaycastHit.distance > 1.8f ||  hitUp == false)
+            return true;
+
+        return false;
     }
 }
