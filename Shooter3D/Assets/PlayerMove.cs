@@ -47,7 +47,7 @@ public class PlayerMove : MonoBehaviour
         moveDirection = Vector3.ClampMagnitude(moveDirection, 1f);
 
         float speedMultiplier = 1f;
-        if (Input.GetKey(KeyCode.LeftShift))
+        if (Input.GetKey(KeyCode.LeftShift) && Input.GetKey(KeyCode.LeftControl) == false)
         {
             speedMultiplier = 2f;
         }
