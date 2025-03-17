@@ -45,19 +45,26 @@ public class PlayerMove : MonoBehaviour
         
         moveDirection = new Vector3(Input.GetAxisRaw("Horizontal"), 0, Input.GetAxisRaw("Vertical"));
         moveDirection = Vector3.ClampMagnitude(moveDirection, 1f);
-        worldDirection = transform.TransformVector(moveDirection) * speed;
+
+        float speedMultiplier = 1f;
+        if (Input.GetKey(KeyCode.LeftShift))
+        {
+            speedMultiplier = 2f;
+        }
+        
+        worldDirection = transform.TransformVector(moveDirection) * speed * speedMultiplier;
         
         velocity = new Vector3(worldDirection.x, velocity.y, worldDirection.z);
         
         characterController.Move(velocity * Time.deltaTime);
 
-        if (Input.GetKey(KeyCode.LeftControl))
+        if (Input.GetKey(KeyCode.LeftControl) || MayStandUp() == false)
         {
             characterController.height = Mathf.Lerp(characterController.height, 0.9f , Time.deltaTime * 10f);
             characterController.center = Vector3.Lerp(characterController.center, Vector3.up * 0.45f , Time.deltaTime * 10f);
             head.localPosition = Vector3.Lerp(head.localPosition, Vector3.up * 0.8f , Time.deltaTime * 10f);
         }
-        else if (MayStandUp())
+        else
         {
             characterController.height = Mathf.Lerp(characterController.height, 1.8f, Time.deltaTime * 10f);
             characterController.center = Vector3.Lerp(characterController.center, Vector3.up * 0.9f , Time.deltaTime * 10f);
