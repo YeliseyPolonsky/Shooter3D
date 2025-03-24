@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class Shooting : MonoBehaviour
 {
+    [SerializeField] private float _damage = 20f;
     [SerializeField] private Transform cameraTransform;
     [SerializeField] private float fireRate = 0.1f;
     [SerializeField] private GameObject flash;
@@ -33,10 +34,15 @@ public class Shooting : MonoBehaviour
 
         if (Physics.Raycast(ray, out hit, 1000f, layerMask))
         {
+            if (hit.collider.GetComponent<EnemyBodyPart>() is EnemyBodyPart enemyBodyPart)
+            {
+                enemyBodyPart.Hit(_damage, enemyBodyPart, ray.direction);
+            }
+
             GameObject newBulletMark = Instantiate(bulletMark, hit.point, Quaternion.LookRotation(hit.normal));
             newBulletMark.transform.parent = hit.transform;
         }
-        
+
         animator.SetTrigger("Shot");
         bulletSound.Stop();
         bulletSound.Play();
@@ -45,6 +51,7 @@ public class Shooting : MonoBehaviour
         {
             StopCoroutine(shootProcess);
         }
+
         shootProcess = StartCoroutine(ShootProcess());
     }
 
